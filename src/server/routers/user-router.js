@@ -39,14 +39,14 @@ const CACHE = {
   
   // Registers a user to the cache
   user_create: function(user) {
-    this.users[user._id] = {
+    this.users[user.id] = {
       last_submit: 0
     }
   },
 
   // Registers a score to the cache
   score_create: function(user) { 
-    this.scores[user._id] = { 
+    this.scores[user.id] = { 
       username: user.username, 
       category: user.category, 
       score: 0, 
@@ -91,14 +91,14 @@ user_router.post('/data', user(io((req, res, user) => {
   const cooldown = Env.get_int('SUBMISSION_COOLDOWN');
 
   // Check cache
-  if(!CACHE.users[user._id])
+  if(!CACHE.users[user.id])
     CACHE.user_create(user)
 
   // No need to update; user can't have submitted within cooldown
-  if(timestamp - CACHE.users[user._id].last_submit < cooldown && CACHE.users[user._id].last_submit > 0)
+  if(timestamp - CACHE.users[user.id].last_submit < cooldown && CACHE.users[user.id].last_submit > 0)
     return res.json({
       username: user.username, category: user.category,
-      last_submit: CACHE.users[user._id].last_submit, 
+      last_submit: CACHE.users[user.id].last_submit, 
     })
 
   // Get last submission timestamp
@@ -122,7 +122,7 @@ user_router.post('/configlist', user(io((req, res, user) => {
 user_router.post('/problemlist', user(io((req, res, user) => {   
   Query(Problem)
     .select({ status: 'active' })
-    .then(problems => res.json({ problems: problems.map(problem => ({ _id: problem._id, name: problem.name, code: problem.code, points: problem.points, }))}))
+    .then(problems => res.json({ problems: problems.map(problem => ({ id: problem.id, name: problem.name, code: problem.code, points: problem.points, }))}))
     .run()
 })));
 
@@ -131,8 +131,8 @@ user_router.post('/problemlist', user(io((req, res, user) => {
  */
 user_router.post('/submissionlist', user(io((req, res, user) => {
   Aggregate(Submission)
-    .filter('user_id', user._id)
-    .join(Problem, 'problem_id', '_id', 'problem', [ 'name', 'code', 'points' ])
+    .filter('user_id', user.id)
+    .join(Problem, 'problem_id', 'id', 'problem', [ 'name', 'code', 'points' ])
     .filter('problem_name', Predicate().ne())
     .then(submissions => res.json({ submissions }))
     .run()
@@ -170,13 +170,13 @@ user_router.post('/scorelist', user(io((req, res, user) => {
 		.group([ 'problem_id', 'user_id' ], [ 'user_id', 'problem_id', 'points' ])
 		
 		// Join problem data and filter by status and nullity
-		.join(Problem, 'problem_id', '_id', 'p', [ 'name', 'points', 'status' ])
+		.join(Problem, 'problem_id', 'id', 'p', [ 'name', 'points', 'status' ])
 		.filter('p_status', 'active')
 		.filter('p_name', Predicate().ne())
 
 		// Group by user, filter by user
 		.group('user_id', [], Fields().field('score').sum('p_points'))
-		.join(User, '_id', '_id', 'u', [ 'username', 'category' ])
+		.join(User, 'id', 'id', 'u', [ 'username', 'category' ])
 		.filter('u_username', Predicate().ne())
 
 		// Rename fields to proper format
@@ -186,7 +186,7 @@ user_router.post('/scorelist', user(io((req, res, user) => {
     .then(scores => (
 
       // Update score cache
-      scores.map(score => CACHE.score(score._id).score = score.score),
+      scores.map(score => CACHE.score(score.id).score = score.score),
       CACHE.scores = Object.values(CACHE.scores),
       
       // Sort then generate ranks
@@ -213,10 +213,10 @@ user_router.post('/scorelist', user(io((req, res, user) => {
  * Submits an answer for a problem.
  */
 user_router.post('/submit', user(io((req, res, user) => {
-  const { _id, answer } = req.get('submit-');
+  const { id, answer } = req.get('submit-');
 
   // Grab timestamp
-  const user_id = user._id;
+  const user_id = user.id;
   const timestamp = now();
   const cooldown = Env.get_int('SUBMISSION_COOLDOWN')
   const max_attempts = Env.get_int('SUBMISSION_ATTEMPTS')
@@ -237,7 +237,7 @@ user_router.post('/submit', user(io((req, res, user) => {
 
   // Grab problem
   Query(Problem)
-    .select({ _id })
+    .select({ id })
     .result_is_empty(res.failure({ status: 400, error: 'Requested problem does not exist.' }))
     .result_is_not_empty(problems => {
 
@@ -260,7 +260,7 @@ user_router.post('/submit', user(io((req, res, user) => {
         // Grab number of attempts
         Aggregate(Submission)
           .filter('user_id', user_id)
-          .filter('problem_id', _id)
+          .filter('problem_id', id)
           .count('user_id')
           .result_is_empty(() => attempts = 0)
           .result_is_not_empty(submissions => attempts = submissions[0].count)
@@ -273,14 +273,14 @@ user_router.post('/submit', user(io((req, res, user) => {
             // Check if already answered
             Aggregate(Submission)
               .filter('user_id', user_id)
-              .filter('problem_id', _id)
+              .filter('problem_id', id)
               .filter('verdict', 'correct')
               .result_is_not_empty(res.failure({ status: 469, error: 'Problem already answered correctly.' }))
               .result_is_empty(() => {
 
                 // Save the submission
                 const verdict = check_answer(answer, answer_key, tolerance);
-                const submission = { user_id: user_id, problem_id: _id, answer, verdict, timestamp };
+                const submission = { user_id: user_id, problem_id: id, answer, verdict, timestamp };
 
                 Query(Submission)
                   .insert(submission)

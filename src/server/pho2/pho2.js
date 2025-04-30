@@ -56,7 +56,7 @@ export const PHO2 = (() => {
 	 */
 	_.user_last_submit = promisify(([ promise, resolve, reject ], user) => (
 		Aggregate(Submission)
-			.filter('user_id', user._id)
+			.filter('user_id', user.id)
 			.filter('timestamp', Predicate().lt(Env.get_int('CONTEST_ELIMS_END')))
 			.filter('timestamp', Predicate().ge(parseInt(Env.get_int('CONTEST_ELIMS_START'))))
 			.group('user_id', [], Fields().field('timestamp').max('timestamp'))

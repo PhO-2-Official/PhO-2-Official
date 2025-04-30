@@ -84,7 +84,7 @@ const PROGRESS = (() => {
 
   // Problem submission helper methods
   const problem_submissions = (problem) => 
-    PHO2.submissions().filter(submission => submission.problem_id === problem._id)
+    PHO2.submissions().filter(submission => submission.problem_id === problem.id)
 
   const problem_submissions_count = (problem) =>
     problem_submissions(problem).length
@@ -113,20 +113,20 @@ const PROGRESS = (() => {
 
   // Forms
   problems_form
-    .form_field('_id', { type: 'text' })
+    .form_field('id', { type: 'text' })
     .form_field('answer', { type: 'text' }, { 
       checker: Formatter.valid_submission_answer, 
       mapper: Formatter.lift_submission_answer 
     })
     .form_text('countdown', '')
-    .form_field_hide('_id')
+    .form_field_hide('id')
     .select('.text.countdown').append(div().c('ui', 'header', 'massive', 'red', 'text'))
 
   // Handles clicks on the problems table
   const problems_table_handler = (problem) => (
     problems_form
       .form_clear()
-      .form_field_value('_id', problem._id),
+      .form_field_value('id', problem.id),
     problem_submissions_verdict(problem) 
       ? problems_form.form_field_hide('answer').select('.text.countdown').display('block')
       : problems_form.form_field_show('answer').select('.text.countdown').display(false),

@@ -73,23 +73,14 @@ const problem_checker = (problem) => {
  */
 admin_router.post('/registeruser', admin(io((req, res, user) => {
   const { username, password, category, status } = req.get('user-');
-  const new_user = { username, password, category, status, is_admin: false }
+  const new_user = { username, password, category, status, is_admin: false };
 
   Promise.resolve()
-    
-    // Check if duplicate
-    .then(() => UserManager.get_user_by_username(username))
-    .then(({ data, error }) => { if (!data) throw new Error(error ?? 'Duplicate username found.'); })
-
-    // Hash password
     .then(() => bcrypt.hash(password, SALT_ROUNDS))
-    .then(hash => (new_user.password = hash))
-
-    // Create user
+    .then((hash) => new_user.password = hash)
     .then(() => UserManager.create_user(new_user))
-    .then(({ error }) => { if (error) throw new Error(error); })
     .then(res.success({ message: 'User created successfully.' }))
-    .catch(res.failure({ status: 400, error: 'Username taken.' }));
+    .catch(res.failure({ status: 400, error: 'Something went wrong. Ensure the username is unique.' }))
 })))
 
 /**
@@ -100,30 +91,44 @@ admin_router.post('/registerproblem', admin(io((req, res, user) => {
   const new_problem = { name, type, status, code, answer, tolerance, points }
 
   // Create the problem
-  QueryFactory.insert_if_unique(Problem, [ { name }, { code } ], new_problem)
-    .then(res.success({ message: 'Problem created successfully.'}))
-    .catch(res.failure({ status: 400, error: 'Problem name or code already exists.' }))
+  ProblemManager
+    .create_problem({
+      ...new_problem,
+      code_number: parseInt(code.number),
+      code_alpha: code.alpha,
+      answer_mantissa: parseFloat(answer.mantissa),
+      answer_exponent: parseInt(answer.exponent),
+    })
+    .then(console.log)
+    .then(res.success({ message: 'Problem created successfully.' }))
+    .catch(console.log)
 })));
 
 /**
  * Grabs a list of all users.
  */
 admin_router.post('/userlist', admin((req, res, user) => 
-  Query(User).select().then(users => res.json({ users })).run()
+  UserManager
+    .get_users()
+    .then(users => res.json({ users: users.data }))
 ))
 
 /**
  * Grabs the configuration of the contest.
  */
 admin_router.post('/configlist', admin((req, res, user) => 
-  Query(Config).select().then(config => res.json({ config })).run()
+  ConfigManager
+    .get_configs()
+    .then(configs => res.json({ config: configs.data }))
 ))
 
 /**
  * Grabs a list of all problems.
  */
 admin_router.post('/problemlist', admin((req, res, user) => 
-  Query(Problem).select().then(problems => res.json({ problems })).run()
+  ProblemManager
+    .get_problems()
+    .then(problems => res.json({ problems: problems.data }))
 ))
 
 /**
@@ -133,8 +138,8 @@ admin_router.post('/submissionlog', admin(io((req, res, user) =>
   
   // Wow we're using a 'join' LMAO
   Aggregate(Submission)
-    .join(User, 'user_id', '_id', 'user', [ 'username' ])
-    .join(Problem, 'problem_id', '_id', 'problem', [ 'name', 'code' ])
+    .join(User, 'user_id', 'id', 'user', [ 'username' ])
+    .join(Problem, 'problem_id', 'id', 'problem', [ 'name', 'code' ])
     
     // Filter deleted users and problems
     .filter('user_username', Predicate().ne())
@@ -145,7 +150,7 @@ admin_router.post('/submissionlog', admin(io((req, res, user) =>
     .field('s_answerstring', function(answer) { return answer.mantissa + 'e' + answer.exponent }, [ 'answer' ])
     
     // Exclude fields then rename them
-    .project({ _id: false, user_id: false, problem_id: false, problem_code: false, answer: false, __v: false })
+    .project({ id: false, user_id: false, problem_id: false, problem_code: false, answer: false, __v: false })
     .rename({ user_username: 'username', p_codestring: 'code', s_answerstring: 'answer', verdict: 'verdict', timestamp: 'timestamp' })
 
     // Yes
@@ -158,7 +163,7 @@ admin_router.post('/submissionlog', admin(io((req, res, user) =>
  * Updates config variables.
  */
 admin_router.post('/editconfig', admin(io((req, res, user) => {
-  const { _id, key, value } = req.get('config-');
+  const { id, key, value } = req.get('config-');
   const changes = { /*key,*/ value };
   
   // Callback for success
@@ -168,7 +173,7 @@ admin_router.post('/editconfig', admin(io((req, res, user) => {
     Env.set(key, value)
   )
 
-  QueryFactory.update_if_exists(Config, _id, changes)
+  QueryFactory.update_if_exists(Config, id, changes)
     .then(succeed_and_update)
     .catch(res.failure({ status: 400, error: 'Parameter does not exist.' }))
 })))
@@ -177,10 +182,10 @@ admin_router.post('/editconfig', admin(io((req, res, user) => {
  * Updates problem details.
  */
 admin_router.post('/editproblem', admin(io((req, res, user) => {
-  const { _id, name, type, code, answer, tolerance, points, status } = req.get('problem-');
+  const { id, name, type, code, answer, tolerance, points, status } = req.get('problem-');
   const changes = { name, type, code, answer, tolerance, points, status };
 
-  QueryFactory.update_if_exists(Problem, _id, changes)
+  QueryFactory.update_if_exists(Problem, id, changes)
     .then(res.success({ message: 'Problem updated successfully.' }))
     .catch(res.failure({ status: 400, error: 'Problem does not exist.' }))
 })));
@@ -189,19 +194,19 @@ admin_router.post('/editproblem', admin(io((req, res, user) => {
  * Updates user details.
  */
 admin_router.post('/edituser', admin(io((req, res, user) => {
-  const { _id, username, password, category, status } = req.get('user-');
+  const { id, username, password, category, status } = req.get('user-');
   const changes = { username, category, status }
 
   // Update query
   const update_query = (changes) =>
-    QueryFactory.update_if_exists(User, _id, changes)
+    QueryFactory.update_if_exists(User, id, changes)
       .then(res.success({ message: 'User updated successfully.' }))
       .catch(res.failure({ status: 400, error: 'User does not exist.' }))
 
   // Check for duped usernames
   const check_query = () => Aggregate(User)
     .filter('username', username)
-    .filter('_id', Predicate().ne(_id))
+    .filter('id', Predicate().ne(_id))
     .then((results) =>
       results.length 
         ? res.failure({ status: 403, error: 'Duplicate username.' })()
@@ -222,9 +227,9 @@ admin_router.post('/edituser', admin(io((req, res, user) => {
  * Deletes users.
  */
 admin_router.post('/deleteuser', admin(io((req, res, user) => {
-  const { _id } = req.get('user-');
+  const { id } = req.get('user-');
 
-  QueryFactory.delete_if_exists(User, _id)
+  QueryFactory.delete_if_exists(User, id)
     .then(res.success({ message: 'User deleted successfully.' }))
     .catch(res.failure({ status: 400, error: 'User does not exist.' }))
 })));
@@ -233,9 +238,9 @@ admin_router.post('/deleteuser', admin(io((req, res, user) => {
  * Deletes problems.
  */
 admin_router.post('/deleteproblem', admin(io((req, res, user) => {
-  const { _id } = req.get('problem-');
+  const { id } = req.get('problem-');
 
-  QueryFactory.delete_if_exists(Problem, _id)
+  QueryFactory.delete_if_exists(Problem, id)
     .then(res.success({ message: 'Problem deleted successfully.' }))
     .catch(res.failure({ status: 400, error: 'Problem does not exist.' }))
 })));
@@ -268,11 +273,11 @@ admin_router.post('/disableofficial', admin(io((req, res) => {
  * Rechecks problems.
  */
 admin_router.post('/recheckproblem', admin(io((req, res, user) => {
-  const { _id } = req.get('problem-');
+  const { id } = req.get('problem-');
   
   // Query for problem first
   Query(Problem)
-    .select({ _id })
+    .select({ id })
     .result_is_not_empty(problems => {
 
       // Grab the problem and the answer key
@@ -281,7 +286,7 @@ admin_router.post('/recheckproblem', admin(io((req, res, user) => {
 
       // Update the submissions
       Query(Submission)
-        .select({ problem_id: _id })
+        .select({ problem_id: id })
         .update('verdict', checker, [ 'answer.mantissa', 'answer.exponent' ])
         .then(res.success({ message: 'Successfully rechecked problem.'}))
         .run()

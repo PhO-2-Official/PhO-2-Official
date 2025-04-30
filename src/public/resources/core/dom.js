@@ -1,7 +1,7 @@
 /**
  * @ Author: Mo David
  * @ Create Time: 2024-10-29 15:07:13
- * @ Modified time: 2024-11-19 21:36:38
+ * @ Modified time: 2025-04-30 22:04:50
  * @ Description:
  * 
  * Utilities for dealing with DOM-related stuff.
@@ -888,7 +888,7 @@ const DOM = (() => {
 				form_field_type: (name, type, options={}) => (
 
 					// Get the appropriate field
-					((field) => (
+					((field, opts = {}) => (
 
 						field
 						 
@@ -898,6 +898,7 @@ const DOM = (() => {
 								// Switch based on type, if specified
 								(({
 									text: () => (null),
+									int: () => (type = 'number', opts.step = '1'),
 									date: () => (type = 'datetime-local'),
 									select: () => (options.options.map(option => 
 										field.append(element('option').t(option)))),
@@ -906,6 +907,7 @@ const DOM = (() => {
 
 								// Update type then return form (or current type)
 								type && field.a('type', type),
+								type && Object.keys(opts).map(key => field.a(key, opts[key])),
 								type ? form : field.a('type'))
 
 							// Field does not exist

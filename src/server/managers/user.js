@@ -13,9 +13,18 @@ export const UserManager = (() => {
   })
 
   const QUERIES = {
+    get_users: new DB.Query('select all users', 'SELECT * FROM public.users'),
     get_user_by_id: new DB.Query('select user by id', 'SELECT * FROM public.users WHERE id = $1'),
     get_user_by_username: new DB.Query('select user by username', 'SELECT * FROM public.users WHERE username = $1'),
     create_user: new DB.Query('insert new user', 'INSERT INTO public.users (username, password, is_admin, status, category) VALUES ($1, $2, $3, $4, $5)')
+  }
+
+  const get_users = async () => {
+    return {
+      success: true,
+      errro: null,
+      data: await QUERIES.get_users.execute(),
+    }
   }
 
   const get_user_by_id = async (id) => {
@@ -39,11 +48,12 @@ export const UserManager = (() => {
     return {
       success,
       error,
-      data: success ? await QUERIES.create_user([ user.username, user.password, user.is_admin, user.status, user.category ]) : null,
+      data: success ? await QUERIES.create_user.execute([ user.username, user.password, user.is_admin, user.status, user.category ]) : null,
     }
   }
 
   return {
+    get_users,
     get_user_by_id,
     get_user_by_username,
     create_user,

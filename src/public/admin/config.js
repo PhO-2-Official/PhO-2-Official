@@ -56,22 +56,22 @@ const CONFIG = (() => {
 
   // Modal forms
   const config_form = DOM.stateful_form()
-    .form_field('_id', { type: 'text' })
+    .form_field('id', { type: 'text' })
     .form_field('Key', { type: 'text' })
     .form_field('Value', { type: 'text' }, { mapper: { 'datetime-local': (value) => Time.timestamp_from_datestr(value) } })
-    .form_field_hide('_id')  
+    .form_field_hide('id')  
     .form_field_hide('key')
 
   const users_form = DOM.stateful_form()
-    .form_field('_id', { type: 'text' })
+    .form_field('id', { type: 'text' })
     .form_field('Username', { type: 'text' })
     .form_field('Password', { type: 'text' })
     .form_field('Status', { type: 'select', options: [ 'participating', 'spectating', 'disqualified' ] })
     .form_field('Category', { type: 'select', options: [ 'junior', 'senior' ] })
-    .form_field_hide('_id')
+    .form_field_hide('id')
 
   const problems_form = DOM.stateful_form()
-    .form_field('_id', { type: 'text' })
+    .form_field('id', { type: 'text' })
     .form_field('Name', { key: 'problem-name', type: 'text' })
     .form_field('Code', { key: 'problem-code', type: 'text' }, { 
       checker: Formatter.valid_problem_code, 
@@ -83,7 +83,7 @@ const CONFIG = (() => {
     .form_field('Type', { type: 'select', options: [ 'official', 'debug' ] })
     .form_field('Status', { type: 'select', options: [ 'active', 'disabled' ] })
     .form_field('Points', { type: 'text' })
-    .form_field_hide('_id')
+    .form_field_hide('id')
 
   const action_apply = (modal, form, target, callback) => (
     modal.modal_action('apply', () => 
@@ -220,7 +220,6 @@ const CONFIG = (() => {
   const config_table_handler = (parameter) => (
     config_form
       .form_clear()
-      .form_field_value('_id', parameter._id)
       .form_field_value('key', parameter.key)
       .form_field_type('value', parameter.type)
       .form_field_value('value', parameter.value),
@@ -234,7 +233,7 @@ const CONFIG = (() => {
   const problems_table_handler = (problem) => (
     problems_form
       .form_clear()
-      .form_field_value('_id', problem._id)
+      .form_field_value('id', problem.id)
       .form_field_value('problem-name', problem.name)
       .form_field_value('type', problem.type)
       .form_field_value('status', problem.status)
@@ -254,7 +253,7 @@ const CONFIG = (() => {
   const users_table_handler = (user) => (
     users_form
       .form_clear()
-      .form_field_value('_id', user._id)
+      .form_field_value('id', user.id)
       .form_field_value('username', user.username)
       .form_field_value('status', user.status)
       .form_field_value('category', user.category)
@@ -289,7 +288,8 @@ const CONFIG = (() => {
           parameter.type === 'url'
             ? link().t(parameter.value).ref(parameter.value) : parameter.type === 'date'
             ? span().t(Time.timestamp_to_mdy_hms(parameter.value)) : parameter.type === 'duration'
-            ? span().t(parameter.value) 
+            ? span().t(parameter.value) : parameter.type === 'int'
+            ? span().t(parameter.value)
             : span().t(parameter.value))
       )
   )
@@ -345,7 +345,7 @@ const CONFIG = (() => {
   users_new.listen('click', () => (
     users_form
       .form_clear()
-      .form_field_value('_id', '-')
+      .form_field_value('id', '-')
       .form_field_value('status', 'participating')
       .form_field_hide('status')
       .select('.field.password').c('req'),
@@ -362,7 +362,7 @@ const CONFIG = (() => {
   problems_new.listen('click', () => (
     problems_form
       .form_clear()
-      .form_field_value('_id', '-'),
+      .form_field_value('id', '-'),
 
     problems_modal
       .modal_header('create new problem')

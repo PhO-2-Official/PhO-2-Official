@@ -1,7 +1,7 @@
 /**
  * @ Author: Mo David
  * @ Create Time: 2024-11-01 03:53:41
- * @ Modified time: 2025-04-30 14:48:54
+ * @ Modified time: 2025-04-30 22:56:26
  * @ Description:
  * 
  * Handles db related queries and what not.
@@ -68,51 +68,8 @@ export const DB = (() => {
 		}
 	}
 
-	// The transaction class handles creating robust sequences of queries
-	class Transaction {
-		
-		/**
-		 * Creates a transaction from a dict of named queries.
-		 * 
-		 * @param name			The name of the transaction. 
-		 * @param queries		A dictionary of named queries. 
-		 */
-		constructor(name, queries) {
-			this.name = name;
-			this.queries = queries;
-		}
-
-		/**
-		 * Executes the queries as a single transaction.
-		 * 
-		 * @param	values	A dictionary relating values to the names of each query.
-		 */
-		async execute(values) {
-			
-			// Attempt transaction
-			try {	
-				await client_pool.query('BEGIN');
-
-				// Execute each query sequentially
-				for (const [name, query] of this.queries) {
-					if (!values[name]) await client_pool.query(query);
-					else await client_pool.query(query, values[name]);
-				}
-
-				// Finalize the transaction
-				return await client_pool.query('COMMIT');
-				
-			// Rollback transaction
-			} catch(error) {
-				return await client_pool.query('ROLLBACK');
-				console.error(`Transaction "${this.name}" failed: ${error}`);
-			}
-		}
-	}
-
 	return {
 		Query,
-		Transaction
 	}
 
 })()
