@@ -7,15 +7,15 @@ export const UserManager = (() => {
   const User = z.object({
     username: z.string(),
     password: z.string(),
-    isAdmin: z.boolean().default(false),
+    is_admin: z.boolean().default(false),
     category: z.enum(['junior', 'senior', 'open']).default('junior'),
     status: z.enum(['participating', 'disqualified', 'spectating']).default('participating'),
   })
 
   const QUERIES = {
-    get_user_by_id: new DB.Query('select user by id', 'SELECT * FROM users WHERE id = $1'),
-    get_user_by_username: new DB.Query('select user by username', 'SELECT * FROM users WHERE username = $1'),
-    create_user: new DB.Query('insert new user', 'INSERT INTO users (username, password, is_admin, status, category) VALUES ($1, $2, $3, $4, $5)')
+    get_user_by_id: new DB.Query('select user by id', 'SELECT * FROM public.users WHERE id = $1'),
+    get_user_by_username: new DB.Query('select user by username', 'SELECT * FROM public.users WHERE username = $1'),
+    create_user: new DB.Query('insert new user', 'INSERT INTO public.users (username, password, is_admin, status, category) VALUES ($1, $2, $3, $4, $5)')
   }
 
   const get_user_by_id = async (id) => {

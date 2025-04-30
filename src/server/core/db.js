@@ -1,7 +1,7 @@
 /**
  * @ Author: Mo David
  * @ Create Time: 2024-11-01 03:53:41
- * @ Modified time: 2025-04-30 12:46:08
+ * @ Modified time: 2025-04-30 14:48:54
  * @ Description:
  * 
  * Handles db related queries and what not.
@@ -23,9 +23,14 @@ export const DB = (() => {
 	// Connect to db
 	client_pool.connect();
 
-	// Listen to events
-	client_pool.on('connect', async () => {
+	// One-time init config
+	client_pool.once('connect', async () => {
 		console.log('Database connected.');
+	
+		// Update config vars
+		client_pool.query('SELECT * FROM config.config')
+			.then(results => results.rows)
+			.then(config => config.map(parameter => Env.set(parameter.key, parameter.value)))
 	})
 
 	// Something went wrong 
@@ -54,8 +59,12 @@ export const DB = (() => {
 		 * @returns 
 		 */
 		async execute(values = null) {
-			if (!values) return await client_pool(this.query);
-			else return await client_pool(this.query, values);
+			const results = 
+				!values 
+					? await client_pool.query(this.query) 
+					: await client_pool.query(this.query, values);
+
+			return results.rowCount ? results.rows : [];
 		}
 	}
 

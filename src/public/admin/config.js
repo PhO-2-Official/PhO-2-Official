@@ -267,7 +267,7 @@ const CONFIG = (() => {
       .modal_action_show('delete')
       .modal_action_show('apply'),
     
-    user.isAdmin 
+    user.is_admin 
       ? users_modal.modal_action_hide('delete') 
       : null,
     users_modal.modal_open()
@@ -332,8 +332,8 @@ const CONFIG = (() => {
         }),
         td_auto_label({
           '.label': {
-            t: user.isAdmin ? 'admin' : user.category,
-            c: user.isAdmin ? 'red' : user.category === 'junior' ? 'default': 'black'
+            t: user.is_admin ? 'admin' : user.category,
+            c: user.is_admin ? 'red' : user.category === 'junior' ? 'default': 'black'
           }
         }),
         td_auto()

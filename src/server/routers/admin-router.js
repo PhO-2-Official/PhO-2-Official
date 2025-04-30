@@ -28,7 +28,7 @@ const admin = (f) => (
 
   // Make sure user is authorized first
   authorized_user_fail((req, res, user, ...args) => (
-    user.isAdmin
+    user.is_admin
       ? f(req, res, user, ...args)
       : null
   ))

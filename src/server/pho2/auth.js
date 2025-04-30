@@ -1,7 +1,7 @@
 /**
  * @ Author: Mo David
  * @ Create Time: 2024-11-01 03:20:42
- * @ Modified time: 2025-04-30 12:26:41
+ * @ Modified time: 2025-04-30 14:44:22
  * @ Description:
  * 
  * Deals with auth-related tasks.
@@ -21,7 +21,7 @@ import { STATIC_VERSION } from '../core/info.js'
  * @param user  The user to generate it for. 
  * @return      The new token. 
  */
-export const generate_token = (user) => jwt.sign({ _id: user._id, }, Env.get('ACCESS_TOKEN_SECRET'));
+export const generate_token = (user) => jwt.sign({ id: user.id, }, Env.get('ACCESS_TOKEN_SECRET'));
 
 /**
  * Refreshes a token.
@@ -29,7 +29,7 @@ export const generate_token = (user) => jwt.sign({ _id: user._id, }, Env.get('AC
  * @param user  The user who owns the token. 
  * @return      The refreshed token.
  */
-export const refresh_token = (user) => jwt.sign({ _id: user._id, }, Env.get('REFRESH_TOKEN_SECRET'));
+export const refresh_token = (user) => jwt.sign({ id: user.id, }, Env.get('REFRESH_TOKEN_SECRET'));
 
 /**
  * Wraps a function around an authorization check.
@@ -97,8 +97,8 @@ const authorized_user_decorator = (func, fail) => (
 
       // Look for user in database and execute appropriate action
       // We don't use our API to avoid coupling io.js to db.js
-      User.findOne({ _id: req.user._id })
-        .then(user => user ? func(req, res, user, ...args) : send_file(res))
+      UserManager.get_user_by_id(req.user.id)
+        .then(user => user.data[0] ? func(req, res, user.data[0], ...args) : send_file(res))
       
     // Token is probably invalid
     } catch (error) {

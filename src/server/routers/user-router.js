@@ -110,10 +110,9 @@ user_router.post('/data', user(io((req, res, user) => {
  * Public config info.
  */
 user_router.post('/configlist', user(io((req, res, user) => {
-  Query(Config)
-    .select({ security: 'public' })
-    .then(parameters => res.json({ config: parameters.map(parameter => ({ key: parameter.key, value: parameter.value }))}))
-    .run()
+  ConfigManager
+    .get_config_by_security('public')
+    .then(parameters => res.json({ config: parameters.data.map(parameter => ({ key: parameter.key, value: parameter.value }))}))
 })));
 
 /**

@@ -24,7 +24,7 @@ auth_router.post('/login', async (req, res) => {
 
   // Look for user in database
   try {
-    const { data: user } = await UserManager.get_user_by_username(username);
+    const { data: [ user ] } = await UserManager.get_user_by_username(username);
 
     if (!user) {
       return res.json({
@@ -33,7 +33,7 @@ auth_router.post('/login', async (req, res) => {
       }).status(401);
     } else {
 
-      if(user.status == 'disqualified' && !user.isAdmin) {
+      if(user.status == 'disqualified' && !user.is_admin) {
         return res.json({
           message: "Login unsuccessful.",
           error: "User disqualified.",

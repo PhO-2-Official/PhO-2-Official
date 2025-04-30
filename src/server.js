@@ -1,7 +1,7 @@
 /**
  * @ Author: Mo David
  * @ Create Time: 2024-10-28 08:26:47
- * @ Modified time: 2025-04-30 12:36:54
+ * @ Modified time: 2025-04-30 14:43:11
  * @ Description:
  * 
  * The main thread on the server.
@@ -97,70 +97,70 @@ const SERVER = (() => {
 
     // Dashboard
     app.get('/dashboard', authorized_user_redirect((req, res, user) => (
-      user.isAdmin
+      user.is_admin
         ? write_file(res, './public/admin/dashboard.html', { STATIC_VERSION, CONTEST_FORUM_URL: Env.get('CONTEST_FORUM_URL') })
         : write_file(res, './public/user/dashboard.html', { STATIC_VERSION, CONTEST_FORUM_URL: Env.get('CONTEST_FORUM_URL') })
     )))
 
     // Config and progress pages
     app.get([ '/config', '/progress' ], authorized_user_redirect((req, res, user) => (
-      user.isAdmin
+      user.is_admin
         ? write_file(res, './public/admin/config.html', { STATIC_VERSION })
         : write_file(res, './public/user/progress.html', { STATIC_VERSION })
     )));
 
     // Problems
     app.get('/problems', authorized_user_redirect((req, res, user) => (
-      during_elims() || user.isAdmin
+      during_elims() || user.is_admin
         ? write_file(res, './public/problems.html', { STATIC_VERSION, CONTEST_PROBLEMS_URL: Env.get('CONTEST_PROBLEMS_URL') })
         : write_file(res, './public/error/unavailable-problems.html', { STATIC_VERSION })
     )));
 
     // Finals
     app.get('/finals', authorized_user_redirect((req, res, user) => (
-      during_finals() || user.isAdmin
+      during_finals() || user.is_admin
         ? write_file(res, './public/finals.html', { STATIC_VERSION, CONTEST_FINALS_URL: Env.get('CONTEST_FINALS_URL') })
         : write_file(res, './public/error/unavailable-finals.html', { STATIC_VERSION })
     )));
 
     // Forum
     app.get('/forum', authorized_user_redirect((req, res, user) => (
-      user.isAdmin
+      user.is_admin
         ? write_file(res, './public/admin/forum.html', { STATIC_VERSION })
         : write_file(res, './public/user/forum.html', { STATIC_VERSION })
     )));
 
     // Leaderboard
     app.get('/leaderboard', authorized_user_redirect((req, res, user) => (
-      user.isAdmin
+      user.is_admin
         ? write_file(res, './public/admin/leaderboard.html', { STATIC_VERSION })
         : write_file(res, './public/user/leaderboard.html', { STATIC_VERSION })
     )));
 
     // Config and progress resources
     app.get([ '/config.js', '/progress.js' ], authorized_user_redirect((req, res, user) => (
-      user.isAdmin
+      user.is_admin
         ? write_file(res, './public/admin/config.js', { STATIC_VERSION })
         : write_file(res, './public/user/progress.js', { STATIC_VERSION })
     )))
 
     // Setup resources
     app.get('/setup.js', authorized_user_redirect((req, res, user) => (
-      user.isAdmin
+      user.is_admin
         ? write_file(res, './public/admin/setup.js', { STATIC_VERSION })
         : write_file(res, './public/user/setup.js', { STATIC_VERSION })
     )))
 
     // Leaderboard resources
     app.get('/leaderboard.js', authorized_user_redirect((req, res, user) => (
-      user.isAdmin
+      user.is_admin
         ? write_file(res, './public/admin/leaderboard.js', { STATIC_VERSION })
         : write_file(res, './public/user/leaderboard.js', { STATIC_VERSION })
     )))
 
     // Forum resources
     app.get('/forum.js', authorized_user_redirect((req, res, user) => (
-      user.isAdmin
+      user.is_admin
         ? write_file(res, './public/admin/forum.js', { STATIC_VERSION })
         : write_file(res, './public/user/forum.js', { STATIC_VERSION })
     )))

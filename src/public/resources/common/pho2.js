@@ -1,7 +1,7 @@
 /**
  * @ Author: Mo David
  * @ Create Time: 2024-10-28 06:26:15
- * @ Modified time: 2024-11-02 18:57:12
+ * @ Modified time: 2025-04-30 14:51:42
  * @ Description:
  * 
  * Utilities for managing the front-end of the website.
@@ -99,7 +99,7 @@ const PHO2 = (() => {
 		const elims_end 		= parseInt(DOM.store(ELIMS_END));
 		const finals_start 	= parseInt(DOM.store(FINALS_START));
 		const finals_end 		= parseInt(DOM.store(FINALS_END));
-		const now 					= parseInt(Date.now())
+		const now 					= parseInt(Date.now());
 
 		// Determine relative time
 		const relative = 
