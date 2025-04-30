@@ -1,14 +1,9 @@
 import 'dotenv/config'
 
 import express from 'express';
-import mongoose from 'mongoose';
-import bcrypt from 'bcrypt';
 
 // The router to use
 export const api_router = express.Router();
-
-//* Models
-import { Submission } from '../models/submission.js';
 
 // //* API Routes
 // api_router.post('/submissionlog', async (req, res) => {

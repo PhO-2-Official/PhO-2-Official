@@ -3,8 +3,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
 import { generate_token, refresh_token } from '../pho2/auth.js';
-import { User } from '../models/user.js';
-
+import { UserManager } from '../managers/user.js';
 import { Env } from '../core/env.js';
 
 export const auth_router = express.Router();
@@ -25,7 +24,7 @@ auth_router.post('/login', async (req, res) => {
 
   // Look for user in database
   try {
-    const user = await User.findOne({ username: username });
+    const { data: user } = await UserManager.get_user_by_username(username);
 
     if (!user) {
       return res.json({

@@ -1,17 +1,14 @@
 /**
  * @ Author: Mo David
  * @ Create Time: 1970-01-01 08:00:00
- * @ Modified time: 2024-11-03 11:15:58
+ * @ Modified time: 2025-04-30 12:30:13
  * @ Description:
  * 
  * Stores a number of queries relevant only to the domain.
  */
 
-import { Aggregate, Fields, Predicate, Query } from '../core/db.js'
-
-import { Problem } from '../models/problem.js';
-import { Submission } from '../models/submission.js';
-import { User } from '../models/user.js';
+import { DB } from '../core/db.js'
+import { SubmissionManager } from '../managers/submission.js';
 
 import { Env } from '../core/env.js';
 

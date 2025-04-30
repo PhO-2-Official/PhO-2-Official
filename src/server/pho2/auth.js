@@ -1,7 +1,7 @@
 /**
  * @ Author: Mo David
  * @ Create Time: 2024-11-01 03:20:42
- * @ Modified time: 2025-01-29 14:13:40
+ * @ Modified time: 2025-04-30 12:26:41
  * @ Description:
  * 
  * Deals with auth-related tasks.
@@ -10,7 +10,7 @@
 import jwt from 'jsonwebtoken';
 
 import { send_file, write_file, fail, succeed, SERVER_HOME_URL } from '../core/io.js';
-import { User } from '../models/user.js';
+import { UserManager } from '../managers/user.js';
 
 import { Env } from '../core/env.js';
 import { STATIC_VERSION } from '../core/info.js'

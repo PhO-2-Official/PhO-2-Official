@@ -5,14 +5,14 @@ import bcrypt from 'bcrypt';
 export const admin_router = express.Router();
 
 import { io } from '../core/io.js'
-import { Aggregate, Predicate, Query, QueryFactory } from '../core/db.js'
+import { DB } from '../core/db.js'
 import { authorized_user_fail } from '../pho2/auth.js';
 import { check_answer } from '../pho2/check.js';
 
-import { User } from '../models/user.js';
-import { Config } from '../models/config.js';
-import { Problem } from '../models/problem.js';
-import { Submission } from '../models/submission.js';
+import { UserManager } from '../managers/user.js';
+import { ConfigManager } from '../managers/config.js';
+import { ProblemManager } from '../managers/problem.js';
+import { SubmissionManager } from '../managers/submission.js';
 
 import { Env } from '../core/env.js';
 
@@ -73,17 +73,23 @@ const problem_checker = (problem) => {
  */
 admin_router.post('/registeruser', admin(io((req, res, user) => {
   const { username, password, category, status } = req.get('user-');
-  const new_user = { username, password, category, status, isAdmin: false }
+  const new_user = { username, password, category, status, is_admin: false }
 
-  const insert_query = () => 
-    QueryFactory.insert_if_unique(User, { username }, new_user)
-      .then(res.success({ message: 'User created successfully.'}))
-      .catch(res.failure({ status: 400, error: 'Username taken.' }))
+  Promise.resolve()
+    
+    // Check if duplicate
+    .then(() => UserManager.get_user_by_username(username))
+    .then(({ data, error }) => { if (!data) throw new Error(error ?? 'Duplicate username found.'); })
 
-  // We gotta hash the password first
-  bcrypt.hash(password, SALT_ROUNDS)
-    .then(hash => (new_user.password = hash, insert_query()))
-    .catch(res.failure())
+    // Hash password
+    .then(() => bcrypt.hash(password, SALT_ROUNDS))
+    .then(hash => (new_user.password = hash))
+
+    // Create user
+    .then(() => UserManager.create_user(new_user))
+    .then(({ error }) => { if (error) throw new Error(error); })
+    .then(res.success({ message: 'User created successfully.' }))
+    .catch(res.failure({ status: 400, error: 'Username taken.' }));
 })))
 
 /**

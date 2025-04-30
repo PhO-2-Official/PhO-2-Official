@@ -1,14 +1,13 @@
 /**
  * @ Author: Mo David
  * @ Create Time: 2024-10-28 08:26:47
- * @ Modified time: 2025-02-24 01:01:09
+ * @ Modified time: 2025-04-30 12:36:54
  * @ Description:
  * 
  * The main thread on the server.
  */
 
 import express from 'express';
-import mongoose from 'mongoose';
 import cookieparser from 'cookie-parser';
 
 import { api_router } from './server/routers/api-router.js';
@@ -16,7 +15,6 @@ import { auth_router } from './server/routers/auth-router.js';
 import { admin_router } from './server/routers/admin-router.js';
 import { user_router } from './server/routers/user-router.js';
 
-import { Config } from './server/models/config.js';
 import { write_file, redirect, SERVER_PUBLIC_URL } from './server/core/io.js'
 import { authorized_redirect, authorized_user_redirect } from './server/pho2/auth.js';
 import { Env } from './server/core/env.js';
@@ -50,40 +48,7 @@ const SERVER = (() => {
   const during_finals = () => ((now) => (now > Env.get('CONTEST_FINALS_START') && now < Env.get('CONTEST_FINALS_END')))(Date.now())
 
   // Production mode (default if MODE is undefined)
-  const is_production = () => !Env.get('MODE') || [ 'PROD', 'PRODUCTION' ].includes(Env.get('MODE'))
-
-  /**
-   * Initializes the database.
-   * We're using mongodb in this case.
-   * I don't remember why I chose that...
-   */
-  _.init_database = () => {
-
-    // Database init
-    mongoose.set('strictQuery', true);
-    mongoose.connect(DATABASE_URL);
-
-    // Get the connection
-    const database = mongoose.connection;
-
-    // If an error occurs
-    database.on('error', (error) => {
-      console.error(error)
-    });
-
-    // When db connected
-    database.once('connected', async () => {
-
-      // Log
-      console.log('Database connected.');
-
-      // Grab the config params 
-      const config = await Config.find();
-
-      // Update the environment variables accordingly
-      config.map(parameter => Env.set(parameter.key, parameter.value))
-    }); 
-  }
+  const is_production = () => [ 'PROD', 'PRODUCTION' ].includes(Env.get('MODE', 'PRODUCTION'))
 
   /**
    * Sets up the server.
@@ -202,7 +167,6 @@ const SERVER = (() => {
   }
 
   // Init the db and server
-  _.init_database();
   _.init_server();
 
 })()

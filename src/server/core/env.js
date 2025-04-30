@@ -1,7 +1,7 @@
 /**
  * @ Author: Mo David
  * @ Create Time: 1970-01-01 08:00:00
- * @ Modified time: 2024-11-03 09:49:00
+ * @ Modified time: 2025-04-30 12:25:28
  * @ Description:
  * 
  * Handles environment variable management.
@@ -10,7 +10,6 @@
  */
 
 import 'dotenv/config'
-import { get } from 'mongoose';
 
 export const Env = (() => {
 	
@@ -18,7 +17,7 @@ export const Env = (() => {
 	const _ = {};
 
 	// Returns the request variable
-	_.get = (variable) => process.env[variable];
+	_.get = (variable, def) => process.env[variable] ?? def;
 
 	// Retrieves a variable as an int
 	_.get_int = (variable) => parseInt(_.get(variable).toString())
